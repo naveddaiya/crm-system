@@ -3,9 +3,11 @@ const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
 const connectDB = require('./config/config');
 const { protect } = require('./Middleware/authMiddleware');
+const cors = require('cors');
 
 // Initialize dotenv to use environment variables
 dotenv.config();
+
 
 // Create an instance of express app
 const app = express();
@@ -16,6 +18,12 @@ const PORT = process.env.PORT || 8000;
 // Middleware to parse incoming requests with JSON payloads
 app.use(express.json());
 app.use(cookieParser())
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 
 //connect DB
 connectDB(process.env.MONGO_URL).then(()=>{console.log(`MongoDB Connected: ${PORT}`)})
