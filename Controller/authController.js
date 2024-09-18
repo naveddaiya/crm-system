@@ -3,6 +3,7 @@ const User = require('../Models/User');
 
 // Generate JWT token
 const generateToken = (id,res) => {
+  console.log("id",id);
   const token = jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '1h' });
   res.cookie("jwt",token)
   console.log("token " + token)
@@ -32,13 +33,14 @@ exports.registerUser = async (req, res) => {
 // Login user
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
-
+  console.log("req.body in login ",req.body)
   try {
     const user = await User.findOne({ email });
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
-    res.json({ token: generateToken(user._id) });
+    generateToken(user._id,res)
+    res.json(user);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -1,6 +1,8 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
 const connectDB = require('./config/config');
+const { protect } = require('./Middleware/authMiddleware');
 
 // Initialize dotenv to use environment variables
 dotenv.config();
@@ -13,6 +15,7 @@ const PORT = process.env.PORT || 8000;
 
 // Middleware to parse incoming requests with JSON payloads
 app.use(express.json());
+app.use(cookieParser())
 
 //connect DB
 connectDB(process.env.MONGO_URL).then(()=>{console.log(`MongoDB Connected: ${PORT}`)})
