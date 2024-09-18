@@ -66,3 +66,15 @@ exports.resetPassword = async (req,res) =>{
     res.status(500).json({ message: error.message });
   }
 }
+
+exports.logoutUser = (req, res) => {
+
+  res.cookie('jwt', '', {
+    httpOnly: true,
+    expires: new Date(0),  // Set the expiry date in the past to delete the cookie
+    sameSite: 'strict',
+  });
+
+  res.status(200).json({ message: 'Logged out successfully'});
+};
+
