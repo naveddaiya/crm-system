@@ -66,7 +66,7 @@ exports.checkUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
+//reset password
 exports.resetPassword = async (req, res) => {
   const { email, oldPassword, newPassword } = req.body;
 
@@ -93,7 +93,7 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
+//logout user
 exports.logoutUser = (req, res) => {
 
   res.cookie('jwt', '', {
@@ -105,10 +105,9 @@ exports.logoutUser = (req, res) => {
   res.status(200).json({ message: 'Logged out successfully'});
 };
 
-//reset password
 // Verify OTP and Reset Password
 exports.verifyOtpAndResetPassword = async (req, res) => {
-  const {email, otp} = req.body;
+  const {email, otp, newPassword} = req.body;
 
   try {
     const user = await User.findOne({ email });
@@ -119,9 +118,13 @@ exports.verifyOtpAndResetPassword = async (req, res) => {
 
     // Check if OTP is valid
     if (user.otp !== otp || user.otpExpiry < Date.now()) {
+      console.log(user.otp)
+      console.log(user.otpExpiry)
+      console.log(Date.now())
+
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
-
+    user.password = newPassword
     // Update password
     // user.password = newPassword;
     user.otp = undefined;  // Clear OTP after successful reset
