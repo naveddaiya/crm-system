@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../Models/User');
 
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 
 // Generate JWT token
@@ -48,27 +49,50 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-exports.resetPassword = async (req,res) =>{
-  const {email,password} = req.body
-
+//check User exist in database
+exports.checkUser = async (req, res) => {
+  const { email } = req.body;
   try {
-    //find user by email
+    // Find user by email
     const user = await User.findOne({ email });
 
-    if(!user){
+    if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
-    user.password = password
-    await user.save()
 
-    // res.json({user});
-
-    // Optionally, you can generate a new JWT token or just send a success response
-    res.json({ message: 'Password reset successful' });
+    // If user is found, respond with a success message
+    res.json({ message: 'User found' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
+};
+
+exports.resetPassword = async (req, res) => {
+  const { email, oldPassword, newPassword } = req.body;
+
+  try {
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    // Validate old password
+    const isMatch = await user.matchPassword(oldPassword);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Old password is incorrect' });
+    }
+
+    // Update to the new password
+    user.password = newPassword; // This will be hashed before saving due to the pre-save hook
+    await user.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 exports.logoutUser = (req, res) => {
 
