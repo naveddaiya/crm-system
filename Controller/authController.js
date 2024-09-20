@@ -1,6 +1,9 @@
 const jwt = require('jsonwebtoken');
 const User = require('../Models/User');
 
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+
 // Generate JWT token
 const generateToken = (id,res) => {
   console.log("id",id);
@@ -76,5 +79,80 @@ exports.logoutUser = (req, res) => {
   });
 
   res.status(200).json({ message: 'Logged out successfully'});
+};
+
+//reset password
+// Verify OTP and Reset Password
+exports.verifyOtpAndResetPassword = async (req, res) => {
+  const {email, otp} = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if OTP is valid
+    if (user.otp !== otp || user.otpExpiry < Date.now()) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    // Update password
+    // user.password = newPassword;
+    user.otp = undefined;  // Clear OTP after successful reset
+    user.otpExpiry = undefined;
+    await user.save();
+
+    res.json({ message: 'Password reset successful' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//forgot password
+// Forgot Password Route
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Generate OTP
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
+
+    // Store OTP and expiry in the database
+    user.otp = otp;
+    user.otpExpiry = otpExpiry;
+    await user.save();
+
+    // Send OTP to user's email
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS
+      }
+    });
+
+    const mailOptions = {
+      from: process.env.GMAIL_USER,
+      to: user.email,
+      subject: 'Password Reset OTP',
+      text: `Your OTP for password reset is: ${otp}. It will expire in 10 minutes.`
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({ message: 'OTP sent to your email' });
+  } catch (error) {
+    console.log("error hun me" + error)
+    res.status(500).json({ message: error.message });
+  }
 };
 
