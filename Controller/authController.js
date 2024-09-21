@@ -182,4 +182,12 @@ exports.forgotPassword = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+exports.getUser = async (req,res) =>{
+  try {
+    const user = req.user
+    res.send(user)
+  } catch (error) {
+    res.status(500).json({message:"Server Error Findin User"})
+  }
+}
 
