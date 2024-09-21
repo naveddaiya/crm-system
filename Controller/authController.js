@@ -182,6 +182,7 @@ exports.forgotPassword = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+//this is get route dhairya bhai
 exports.getUser = async (req,res) =>{
   try {
     const user = req.user
@@ -190,4 +191,5 @@ exports.getUser = async (req,res) =>{
     res.status(500).json({message:"Server Error Findin User"})
   }
 }
+
 
