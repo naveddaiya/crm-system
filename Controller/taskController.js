@@ -2,13 +2,14 @@ const Task = require('../Models/Task');
 
 // Create a new task
 exports.createTask = async (req, res) => {
-  const { title, description, dueDate } = req.body;
+  const { title, description, dueDate,status} = req.body;
 
   try {
     const task = await Task.create({
       title,
       description,
       dueDate,
+      status,
       user: req.user._id,
     });
     res.status(201).json(task);
@@ -18,9 +19,9 @@ exports.createTask = async (req, res) => {
 };
 
 // Get all tasks for a user
-exports.getTasks = async (req, res) => {
+exports.getTasks = async(req, res) => {
   try {
-    const tasks = await Task.find({ user: req.user._id });
+    const tasks = await Task.find({ user: req.user._id }).populate("user");
     res.status(200).json(tasks);
   } catch (err) {
     res.status(500).json({ message: err.message });
