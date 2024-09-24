@@ -2,7 +2,7 @@ const Task = require('../Models/Task');
 
 // Create a new task
 exports.createTask = async (req, res) => {
-  const { title, description, dueDate,status} = req.body;
+  const { title, description, dueDate,status,priority} = req.body;
 
   try {
     const task = await Task.create({
@@ -10,6 +10,7 @@ exports.createTask = async (req, res) => {
       description,
       dueDate,
       status,
+      priority,
       user: req.user._id,
     });
     res.status(201).json(task);
@@ -78,7 +79,7 @@ exports.getSingleTask = async(req,res)=>{
 
 exports.searchTasks = async (req, res) => {
   try {
-    const { query, status, sortBy, order } = req.query;
+    const { query, status,priority, sortBy, order } = req.query;
     
     // Build the search criteria
     let searchCriteria = { user: req.user._id };
@@ -92,6 +93,9 @@ exports.searchTasks = async (req, res) => {
     
     if (status) {
       searchCriteria.status = status.toUpperCase();
+    }
+    if (priority) {
+      searchCriteria.priority = priority.toUpperCase();
     }
 
     // Build the sort options
