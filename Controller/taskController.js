@@ -43,3 +43,71 @@ exports.updateTasks = async(req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.getSingleTask = async(req,res)=>{
+  const taskId = req.params.id
+  console.log("message " + taskId)
+  try {
+    const task = await Task.find({_id:taskId,user:req.user._id})
+    if(!task || task.length === 0){
+      res.status(404).json({message:"Task not found or not authorized to update"})
+    }
+    else{
+      res.status(200).json(task);
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+// exports.searchTasks = async (req, res) => {
+//   const { query } = req.query;
+//   try {
+//     const tasks = await Task.find({
+//       user: req.user._id,
+//       $or: [
+//         { title: { $regex: query, $options: 'i' } },
+//         { description: { $regex: query, $options: 'i' } }
+//       ]
+//     });
+//     res.status(200).json(tasks);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+exports.searchTasks = async (req, res) => {
+  try {
+    const { query, status, sortBy, order } = req.query;
+    
+    // Build the search criteria
+    let searchCriteria = { user: req.user._id };
+    
+    if (query) {
+      searchCriteria.$or = [
+        { title: { $regex: query, $options: 'i' } },
+        { description: { $regex: query, $options: 'i' } }
+      ];
+    }
+    
+    if (status) {
+      searchCriteria.status = status.toUpperCase();
+    }
+
+    // Build the sort options
+    let sortOptions = {};
+    if (sortBy) {
+      sortOptions[sortBy] = order === 'desc' ? -1 : 1;
+    } else {
+      sortOptions = { createdAt: -1 }; // Default sort by creation date, newest first
+    }
+
+    const tasks = await Task.find(searchCriteria)
+                            .sort(sortOptions)
+                            .limit(50); // Limiting results for performance, adjust as needed
+
+    res.status(200).json(tasks);
+  } catch (err) {
+    res.status(500).json({ message: "Error searching tasks", error: err.message });
+  }
+};
